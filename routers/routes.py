@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, FastAPI
+from contextlib import asynccontextmanager
 
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -13,9 +14,18 @@ class Route(BaseModel):
     points: list[Point] = []
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    state = {
+        "route": Route()
+    }
+    yield {"data": state}
+
+
 router = APIRouter(
     prefix="/routes",
     tags=["routes"],
+    lifespan=lifespan,
 )
 
 
