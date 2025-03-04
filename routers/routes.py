@@ -6,17 +6,20 @@ from pydantic_extra_types.coordinate import Coordinate
 
 
 class Point(BaseModel):
-    coordinate : Coordinate
+    coordinate: Coordinate
+
 
 class Route(BaseModel):
-    points : list[Point] = []
+    points: list[Point] = []
+
 
 router = APIRouter(
     prefix="/routes",
     tags=["routes"],
 )
 
+
 @router.get("/get", response_model=Route, responses={})
-async def read_routes(request : Request):
-    route : Route = request.state.data["route"]
+async def read_routes(request: Request):
+    route: Route = request.state.data["route"]
     return JSONResponse(status_code=200, content=route.model_dump())

@@ -5,11 +5,11 @@ from .routers import routes
 
 
 @asynccontextmanager
-async def lifespan(_ : FastAPI):
+async def lifespan(_: FastAPI):
     state = {
-        "route" : routes.Route()
+        "route": routes.Route()
     }
-    yield { "data" : state }
+    yield {"data": state}
 
 
 app = FastAPI(
