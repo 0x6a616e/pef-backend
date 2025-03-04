@@ -19,7 +19,7 @@ router = APIRouter(
 )
 
 
-@router.get("/get", response_model=Route, responses={})
+@router.get("/get", response_model=Route)
 async def read_routes(request: Request):
     route: Route = request.state.data["route"]
     return JSONResponse(status_code=200, content=route.model_dump())
