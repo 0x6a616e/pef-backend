@@ -37,7 +37,6 @@ async def read_route(request: Request):
 
 
 def distance(point1: Coordinate, point2: Coordinate, scale: int) -> int:
-    print(point1)
     dx = (point2.longitude - point1.longitude) ** 2
     dy = (point2.latitude - point1.latitude) ** 2
     d = sqrt(dx + dy)
