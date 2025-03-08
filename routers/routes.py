@@ -78,8 +78,7 @@ def optimize_route(mission: Mission) -> Mission:
     search_parameters.local_search_metaheuristic = (
         routing_enums_pb2.LocalSearchMetaheuristic.GUIDED_LOCAL_SEARCH
     )
-    search_parameters.time_limit.seconds = 5  # TODO: Decidir tiempo
-    # search_parameters.log_search = True
+    search_parameters.time_limit.seconds = 1
 
     solution = routing.SolveWithParameters(search_parameters)
     if solution:
