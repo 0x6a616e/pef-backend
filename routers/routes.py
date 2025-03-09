@@ -1,5 +1,5 @@
 from contextlib import asynccontextmanager
-from math import sqrt
+from math import pi, sin, cos, atan2, sqrt
 
 from fastapi import APIRouter, Request, FastAPI
 from fastapi.responses import JSONResponse
@@ -36,17 +36,22 @@ async def read_route(request: Request):
     return JSONResponse(status_code=200, content=mission.model_dump())
 
 
-def distance(point1: Coordinate, point2: Coordinate, scale: int) -> int:
-    dx = (point2.longitude - point1.longitude) ** 2
-    dy = (point2.latitude - point1.latitude) ** 2
-    d = sqrt(dx + dy)
-    d *= scale
+def distance(point1: Coordinate, point2: Coordinate) -> int:
+    R = 6371e3
+    phi1 = point1.latitude * pi / 180
+    phi2 = point2.latitude * pi / 180
+    diff_phi = (point2.latitude - point1.latitude) * pi / 180
+    diff_gamma = (point2.longitude - point1.longitude) * pi / 180
+    a = sin(diff_phi / 2) * sin(diff_phi / 2) + cos(phi1) * \
+        cos(phi2) * sin(diff_gamma / 2) * sin(diff_gamma / 2)
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    d = R * c
     return int(d)
 
 
 def generate_distance_matrix(mission: Mission) -> list[list[int]]:
     points: list[Coordinate] = [mission.start] + mission.waypoints
-    matrix = [[distance(p1, p2, 100) for p2 in points] for p1 in points]
+    matrix = [[distance(p1, p2) for p2 in points] for p1 in points]
     return matrix
 
 
