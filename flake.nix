@@ -1,7 +1,7 @@
 {
   description = "A Nix-flake-based Python development environment";
 
-  inputs.nixpkgs.url = "https://flakehub.com/f/NixOS/nixpkgs/0.1.*.tar.gz";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
   outputs = { self, nixpkgs }:
     let
@@ -22,5 +22,25 @@
             ]);
         };
       });
+      packages = builtins.mapAttrs (system: pkgs: rec {
+        default = pkgs.dockerTools.streamLayeredImage {
+          name = "teh-awesome-container";
+          tag = "v1";
+
+          contents = pkgs.buildEnv {
+            name = "env1";
+            paths = [
+              pkgs.hello
+              pkgs.perl
+              pkgs.python3
+              ./.
+            ];
+          };
+
+          config = {
+            Cmd = ["hello"];
+          };
+        };
+      }) nixpkgs.legacyPackages;
     };
 }
