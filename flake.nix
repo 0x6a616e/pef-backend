@@ -23,23 +23,18 @@
         };
       });
       packages = builtins.mapAttrs (system: pkgs: {
-        default = pkgs.dockerTools.streamLayeredImage {
-          name = "teh-awesome-container";
-          tag = "v1";
+        default = pkgs.dockerTools.buildImage {
+          name = "pef-backend";
+          tag = "latest";
 
-          contents = pkgs.buildEnv {
-            name = "env1";
-            paths = [
-              pkgs.hello
-              pkgs.perl
-              pkgs.python3
-              ./.
-            ];
+          created = "now";
+          copyToRoot = pkgs.buildEnv {
+            name = "pyenv";
+            paths = [ pkgs.python313 ];
+            pathsToLink = [ "/bin" ];
           };
 
-          config = {
-            Cmd = ["hello"];
-          };
+          config.Cmd = [ "python" "--version" ];
         };
       }) nixpkgs.legacyPackages;
     };
