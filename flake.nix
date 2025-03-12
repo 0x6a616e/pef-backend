@@ -22,20 +22,5 @@
             ]);
         };
       });
-      packages = builtins.mapAttrs (system: pkgs: {
-        default = pkgs.dockerTools.buildImage {
-          name = "pef-backend";
-          tag = "latest";
-
-          created = "now";
-          copyToRoot = pkgs.buildEnv {
-            name = "pyenv";
-            paths = [ pkgs.python313 ];
-            pathsToLink = [ "/bin" ];
-          };
-
-          config.Cmd = [ "python" "--version" ];
-        };
-      }) nixpkgs.legacyPackages;
     };
 }
