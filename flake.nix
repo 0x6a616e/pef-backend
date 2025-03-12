@@ -1,7 +1,7 @@
 {
   description = "A Nix-flake-based Python development environment";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+  inputs.nixpkgs.url = "github:NixOS/nixpkgs/release-24.11";
 
   outputs = { self, nixpkgs }:
     let
@@ -22,7 +22,7 @@
             ]);
         };
       });
-      packages = builtins.mapAttrs (system: pkgs: rec {
+      packages = builtins.mapAttrs (system: pkgs: {
         default = pkgs.dockerTools.streamLayeredImage {
           name = "teh-awesome-container";
           tag = "v1";
