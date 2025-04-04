@@ -1,3 +1,4 @@
+from aiofiles import open as aiopen
 from contextlib import asynccontextmanager
 from math import pi, sin, cos, atan2, sqrt
 
@@ -104,9 +105,20 @@ async def edit_route(request: Request, mission: Mission):
 
 
 @router.post("/uploadfile")
-async def upload_file(latitude: Latitude, longitude: Longitude, file: UploadFile):
+async def upload_file(lat: Latitude, lng: Longitude, file: UploadFile):
+    print({
+        "latitud": lat,
+        "longitud": lng,
+        "filename": file.filename
+    })
+
+    out_file: str = f"images/{lat}.{lng}.{file.filename}"
+    async with aiopen(out_file, "wb") as of:
+        while content := await file.read(1024):
+            await of.write(content)
+
     return {
-        "latitud": latitude,
-        "longitud": longitude,
+        "latitud": lat,
+        "longitud": lng,
         "filename": file.filename
     }
