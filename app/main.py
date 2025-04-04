@@ -5,7 +5,6 @@ from .routers import routes
 
 origins = [
     "https://pef.estupideznatural.tech",
-    "*",    # Development
 ]
 
 

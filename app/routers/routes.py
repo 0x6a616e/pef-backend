@@ -1,13 +1,13 @@
 from contextlib import asynccontextmanager
 from math import pi, sin, cos, atan2, sqrt
 
-from fastapi import APIRouter, Request, FastAPI
+from fastapi import APIRouter, Request, FastAPI, UploadFile
 from fastapi.responses import JSONResponse
 
 from ortools.constraint_solver import routing_enums_pb2, pywrapcp
 
 from pydantic import BaseModel
-from pydantic_extra_types.coordinate import Coordinate
+from pydantic_extra_types.coordinate import Coordinate, Latitude, Longitude
 
 
 class Mission(BaseModel):
@@ -101,3 +101,12 @@ def optimize_route(mission: Mission) -> Mission:
 async def edit_route(request: Request, mission: Mission):
     request.state.data["mission"] = optimize_route(mission)
     return JSONResponse(status_code=200, content=mission.model_dump())
+
+
+@router.post("/uploadfile")
+async def upload_file(latitude: Latitude, longitude: Longitude, file: UploadFile):
+    return {
+        "latitud": latitude,
+        "longitud": longitude,
+        "filename": file.filename
+    }
