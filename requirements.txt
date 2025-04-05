@@ -19,6 +19,7 @@ markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
 numpy==2.2.3
+opencv-python-headless==4.11.0.86
 ortools==9.12.4544
 pandas==2.2.3
 protobuf==5.29.3

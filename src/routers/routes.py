@@ -1,9 +1,11 @@
 from aiofiles import open as aiopen
 from contextlib import asynccontextmanager
+from cv2 import imread, imwrite, resize
 from math import pi, sin, cos, atan2, sqrt
+from time import time
 
 from fastapi import APIRouter, Request, FastAPI, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 from ortools.constraint_solver import routing_enums_pb2, pywrapcp
 
@@ -106,13 +108,14 @@ async def edit_route(request: Request, mission: Mission):
 
 @router.post("/uploadfile")
 async def upload_file(lat: Latitude, lng: Longitude, file: UploadFile):
-    out_file: str = f"images/{lat}.{lng}.{file.filename}"
-    async with aiopen(out_file, "wb") as of:
+    tmp_file: str = f"images/tmp_{file.filename}"
+    async with aiopen(tmp_file, "wb") as of:
         while content := await file.read(1024):
             await of.write(content)
 
-    return {
-        "latitud": lat,
-        "longitud": lng,
-        "filename": file.filename
-    }
+    out_file: str = f"images/{lat}.{lng}.{time()}.jpg"
+    resized_image = imread(tmp_file)
+    resized_image = resize(resized_image, (680, 382))
+    imwrite(out_file, resized_image)
+
+    return Response(status_code=200)
