@@ -1,4 +1,5 @@
 from aiofiles import open as aiopen
+from aiofiles.os import remove as airemove
 from contextlib import asynccontextmanager
 from cv2 import imread, imwrite, resize
 from math import pi, sin, cos, atan2, sqrt
@@ -117,5 +118,7 @@ async def upload_file(lat: Latitude, lng: Longitude, file: UploadFile):
     resized_image = imread(tmp_file)
     resized_image = resize(resized_image, (680, 382))
     imwrite(out_file, resized_image)
+
+    await airemove(tmp_file)
 
     return Response(status_code=200)
