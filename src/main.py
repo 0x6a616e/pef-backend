@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .routers import routes
 
 origins = [
-    "https://pef.estupideznatural.tech",
+    "*",
 ]
 
 
