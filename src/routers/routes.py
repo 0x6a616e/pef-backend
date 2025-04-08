@@ -1,9 +1,10 @@
 from aiofiles import open as aiopen
-from aiofiles.os import remove as airemove
 from contextlib import asynccontextmanager
-from cv2 import imread, imwrite, resize
 from math import pi, sin, cos, atan2, sqrt
+from PIL import Image
+from PIL.ExifTags import TAGS, GPSTAGS
 from time import time
+from typing import BinaryIO
 
 from fastapi import APIRouter, Request, FastAPI, UploadFile
 from fastapi.responses import JSONResponse, Response
@@ -11,7 +12,7 @@ from fastapi.responses import JSONResponse, Response
 from ortools.constraint_solver import routing_enums_pb2, pywrapcp
 
 from pydantic import BaseModel
-from pydantic_extra_types.coordinate import Coordinate, Latitude, Longitude
+from pydantic_extra_types.coordinate import Coordinate
 
 
 class Mission(BaseModel):
@@ -107,18 +108,60 @@ async def edit_route(request: Request, mission: Mission):
     return JSONResponse(status_code=200, content=mission.model_dump())
 
 
-@router.post("/uploadfile")
-async def upload_file(lat: Latitude, lng: Longitude, file: UploadFile):
-    tmp_file: str = f"images/tmp_{file.filename}"
-    async with aiopen(tmp_file, "wb") as of:
-        while content := await file.read(1024):
-            await of.write(content)
+def convert_to_degrees(value):
+    def to_float(x):
+        return float(x[0]) / float(x[1]) if isinstance(x, tuple) else float(x)
 
-    out_file: str = f"images/{lat}.{lng}.{time()}.jpg"
-    resized_image = imread(tmp_file)
-    resized_image = resize(resized_image, (680, 382))
-    imwrite(out_file, resized_image)
+    try:
+        d, m, s = value
+        return to_float(d) + to_float(m) / 60 + to_float(s) / 3600
+    except Exception:
+        return None
 
-    await airemove(tmp_file)
+
+def process_drone_image(file: BinaryIO) -> None:
+    image = Image.open(file)
+
+    optimal_size = (680, 382)
+    resized_image = image.resize(optimal_size)
+
+    exif = image._getexif()
+    if not exif:
+        return
+
+    gps_data = {}
+    for tag, value in exif.items():
+        decoded = TAGS.get(tag, tag)
+        if decoded == "GPSInfo":
+            for t in value:
+                sub_decoded = GPSTAGS.get(t, t)
+                gps_data[sub_decoded] = value[t]
+
+    if "GPSLatitude" not in gps_data or "GPSLongitude" not in gps_data:
+        return
+
+    lat = convert_to_degrees(gps_data["GPSLatitude"])
+    lng = convert_to_degrees(gps_data["GPSLongitude"])
+
+    if lat is None or lng is None:
+        return
+
+    if gps_data.get("GPSLatitudeRef") == "S":
+        lat = -lat
+    if gps_data.get("GPSLongitudeRef") == "W":
+        lng = -lng
+
+    resized_image.save(f"images/drone_{time()}_{lat}_{lng}_.jpg")
+
+
+@router.post("/uploadfile/{source}")
+async def upload_file(source: str, file: UploadFile):
+    if (source == "drone"):
+        process_drone_image(file.file)
+    else:
+        filename: str = f"images/{source}_{time()}_.jpg"
+        async with aiopen(filename, "wb") as of:
+            while content := await file.read(1024):
+                await of.write(content)
 
     return Response(status_code=200)
