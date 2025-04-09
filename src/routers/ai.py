@@ -49,7 +49,7 @@ def load_segmentation_model():
 def load_images(image_dir):
     image_list = []
     for filename in os.listdir(image_dir):
-        if filename.lower().endswith((".jpg", ".JPG")):
+        if filename.lower().startswith("drone") and filename.lower().endswith((".jpg", ".JPG")):
             img_path = os.path.join(image_dir, filename)
             image = cv2.imread(img_path)
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -113,16 +113,14 @@ def segment_folder_images(folder: str) -> bool:
         return False
 
     if not os.path.exists(full_path):
-        print(f"La carpeta '{
-              folder}' no fue encontrada en la ruta especificada.")
+        print(f"La carpeta '{folder}' no fue encontrada.")
         return False
 
     model, device = load_segmentation_model()
     images = load_images(full_path)
 
     if not images:
-        print(f"La carpeta '{
-              folder}' no contiene imágenes .jpg para procesar.")
+        print(f"La carpeta '{folder}' no contiene imágenes para procesar.")
         return False
 
     results = []
@@ -137,11 +135,10 @@ def segment_folder_images(folder: str) -> bool:
         mask_rgb = convert_mask_to_rgb(prediction, CLASS_COLORS_HEX)
         mask_resized = resize_segmentation_mask(mask_rgb, OUTPUT_SIZE)
 
-        # Extraer timestamp desde el nombre de la imagen (formato: image_<timestamp>.jpg)
-        timestamp = os.path.splitext(filename)[0].replace("image_", "")
+        filedata = "_".join(filename.split("_")[1:-1])
 
         # Crear nombre para la máscara
-        output_filename = f"mask_{timestamp}.png"
+        output_filename = f"mask_{filedata}_.png"
         output_path = os.path.join(full_path, output_filename)
 
         # Guardar la máscara como imagen PNG
@@ -151,10 +148,10 @@ def segment_folder_images(folder: str) -> bool:
         class_distribution = compute_class_distribution(prediction)
 
         # Aplicar filtrado: eliminar imágenes irrelevantes
-        if should_discard(class_distribution):
-            os.remove(os.path.join(full_path, filename))
-            os.remove(output_path)
-            continue
+        # if should_discard(class_distribution):
+        #     os.remove(os.path.join(full_path, filename))
+        #     os.remove(output_path)
+        #     continue
 
         # Agregar resultado válido
         results.append({
