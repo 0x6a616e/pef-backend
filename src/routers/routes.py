@@ -1,12 +1,14 @@
 from aiofiles import open as aiopen
-from contextlib import asynccontextmanager
 from math import pi, sin, cos, atan2, sqrt
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
+from os import mkdir
+from os.path import exists
 from time import time
 from typing import BinaryIO
+from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Request, FastAPI, UploadFile
+from fastapi import APIRouter, Request, UploadFile
 from fastapi.responses import JSONResponse, Response
 
 from ortools.constraint_solver import routing_enums_pb2, pywrapcp
@@ -14,31 +16,28 @@ from ortools.constraint_solver import routing_enums_pb2, pywrapcp
 from pydantic import BaseModel
 from pydantic_extra_types.coordinate import Coordinate
 
+from .ai import segment_folder_images
+
 
 class Mission(BaseModel):
+    id: UUID
     start: Coordinate = None
     waypoints: list[Coordinate] = []
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI):
-    state = {
-        "mission": Mission()
-    }
-    yield {"data": state}
-
+# Change this section
+IMAGES_FOLDER = "images"
+CURRENT_MISSION = Mission(id=uuid4())
 
 router = APIRouter(
     prefix="/routes",
     tags=["routes"],
-    lifespan=lifespan,
 )
 
 
 @router.get("/get", response_model=Mission)
 async def read_route(request: Request):
-    mission: Mission = request.state.data["mission"]
-    return JSONResponse(status_code=200, content=mission.model_dump())
+    return JSONResponse(status_code=200, content=CURRENT_MISSION.model_dump())
 
 
 def distance(point1: Coordinate, point2: Coordinate) -> int:
@@ -104,8 +103,8 @@ def optimize_route(mission: Mission) -> Mission:
 
 @router.post("/edit", response_model=Mission)
 async def edit_route(request: Request, mission: Mission):
-    request.state.data["mission"] = optimize_route(mission)
-    return JSONResponse(status_code=200, content=mission.model_dump())
+    CURRENT_MISSION = optimize_route(mission)
+    return JSONResponse(status_code=200, content=CURRENT_MISSION.model_dump())
 
 
 def convert_to_degrees(value):
@@ -151,17 +150,28 @@ def process_drone_image(file: BinaryIO) -> None:
     if gps_data.get("GPSLongitudeRef") == "W":
         lng = -lng
 
-    resized_image.save(f"images/drone_{time()}_{lat}_{lng}_.jpg")
+    path = f"{IMAGES_FOLDER}/{CURRENT_MISSION.id.hex}"
+    filename = f"drone_{time()}_{lat}_{lng}_.jpg"
+
+    resized_image.save(f"{path}/{filename}")
 
 
 @router.post("/uploadfile/{source}")
 async def upload_file(source: str, file: UploadFile):
+    path = f"{IMAGES_FOLDER}/{CURRENT_MISSION.id.hex}"
+    if not exists(path):
+        mkdir(path)
     if (source == "drone"):
         process_drone_image(file.file)
     else:
-        filename: str = f"images/{source}_{time()}_.jpg"
-        async with aiopen(filename, "wb") as of:
+        filename: str = f"{source}_{time()}_.jpg"
+        async with aiopen(f"{path}/{filename}", "wb") as of:
             while content := await file.read(1024):
                 await of.write(content)
 
     return Response(status_code=200)
+
+
+@router.get("/process")
+async def process():
+    print(segment_folder_images(CURRENT_MISSION.id.hex))
