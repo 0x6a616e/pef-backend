@@ -1,10 +1,9 @@
 from pydantic import BaseModel
 from pydantic_extra_types.coordinate import Coordinate
-from uuid import UUID
 
 
 class Mission(BaseModel):
-    id: UUID
+    id: str
     start: Coordinate = None
     waypoints: list[Coordinate] = []
 
