@@ -13,11 +13,11 @@ OUTPUT_SIZE = (680, 382)  # width, height
 
 # Nombres de las clases
 CLASS_NAMES = {
-    0: "Fondo",
-    1: "Agua",
-    2: "Suelo Expuesto",
-    3: "Vegetacion Seca",
-    4: "Vegetacion Verde"
+    0: "fondo",
+    1: "agua",
+    2: "suelo_expuesto",
+    3: "vegetacion_seca",
+    4: "vegetacion_verde"
 }
 
 # Colores en formato HEX para la visualización

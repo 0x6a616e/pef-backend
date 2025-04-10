@@ -1,32 +1,26 @@
 from aiofiles import open as aiopen
+from fastapi import APIRouter, Request, UploadFile
+from fastapi.responses import JSONResponse, Response
+from json import loads
 from math import pi, sin, cos, atan2, sqrt
 from PIL import Image
 from PIL.ExifTags import TAGS, GPSTAGS
+from pydantic import TypeAdapter
+from pydantic_extra_types.coordinate import Coordinate
+from ortools.constraint_solver import routing_enums_pb2, pywrapcp
 from os import mkdir
 from os.path import exists
 from time import time
 from typing import BinaryIO
-from uuid import UUID, uuid4
-
-from fastapi import APIRouter, Request, UploadFile
-from fastapi.responses import JSONResponse, Response
-
-from ortools.constraint_solver import routing_enums_pb2, pywrapcp
-
-from pydantic import BaseModel
-from pydantic_extra_types.coordinate import Coordinate
+from uuid import uuid4
 
 from .ai import segment_folder_images
-
-
-class Mission(BaseModel):
-    id: UUID
-    start: Coordinate = None
-    waypoints: list[Coordinate] = []
+from .models import Mission, Result
 
 
 # Change this section
 IMAGES_FOLDER = "images"
+RESULTS_FILENAME = "resultados.json"
 CURRENT_MISSION = Mission(id=uuid4())
 
 router = APIRouter(
@@ -174,4 +168,13 @@ async def upload_file(source: str, file: UploadFile):
 
 @router.get("/process")
 async def process():
-    print(segment_folder_images(CURRENT_MISSION.id.hex))
+    if not segment_folder_images(CURRENT_MISSION.id.hex):
+        return Response(status_code=500)
+    filepath = f"{IMAGES_FOLDER}/{CURRENT_MISSION.id.hex}/{RESULTS_FILENAME}"
+    results = list[Result]
+    ta = TypeAdapter(list[Result])
+    async with aiopen(filepath, "rb") as file:
+        content = await file.read()
+        results_dict = loads(content)
+        results = ta.validate_python(results_dict["results"])
+    print(results)
