@@ -1,6 +1,5 @@
 from collections.abc import Callable
 
-from .config import settings
 from .models import Result, SegmentationClass
 from .routing import distance
 
