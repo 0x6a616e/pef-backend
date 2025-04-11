@@ -15,7 +15,7 @@
         default = pkgs.mkShell {
           LD_LIBRARY_PATH = "${pkgs.stdenv.cc.cc.lib}/lib";
           venvDir = ".venv";
-          packages = with pkgs; [ python313 ] ++
+          packages = with pkgs; [ python313 nodejs_23 ] ++
             (with pkgs.python313Packages; [
               pip
               venvShellHook
