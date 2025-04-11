@@ -1,7 +1,8 @@
 from collections.abc import Callable
 
+from .config import settings
 from .models import Result, SegmentationClass
-from .utils import extract_coordinate, distance
+from .routing import distance
 
 Filter = Callable[[list[Result]], list[Result]]
 
@@ -18,9 +19,9 @@ def distribution_filter(results: list[Result]) -> list[Result]:
     filtered_results = []
 
     for result in results:
-        agua = result.distribution.get(SegmentationClass.AGUA)
-        seca = result.distribution.get(SegmentationClass.VEGETACION_SECA)
-        verde = result.distribution.get(SegmentationClass.VEGETACION_VERDE)
+        agua = result.distribution.get(SegmentationClass.AGUA, 0)
+        seca = result.distribution.get(SegmentationClass.VEGETACION_SECA, 0)
+        verde = result.distribution.get(SegmentationClass.VEGETACION_VERDE, 0)
 
         if agua > 40:
             continue
@@ -32,25 +33,25 @@ def distribution_filter(results: list[Result]) -> list[Result]:
 
 
 def distance_filter(results: list[Result]) -> list[Result]:
-    def sort_function(result: Result) -> float:
-        return result.distribution.get(SegmentationClass.VEGETACION_SECA)
+    def sort_key(result: Result) -> float:
+        return result.distribution.get(SegmentationClass.VEGETACION_SECA, 0)
 
-    filtered_results = []
-    min_distance = 10
+    filtered_results: list[Result] = []
+    min_distance = 15
 
     copied_results = results
-    copied_results.sort(reverse=True, key=sort_function)
+    copied_results.sort(reverse=True, key=sort_key)
 
-    for result1 in copied_results:
-        point1 = extract_coordinate(result1)
+    for result_1 in copied_results:
+        point1 = result_1.coordinate
         to_add = True
-        for result2 in filtered_results:
-            point2 = extract_coordinate(result2)
+        for result_2 in filtered_results:
+            point2 = result_2.coordinate
             if distance(point1, point2) < min_distance:
                 to_add = False
                 break
         if to_add:
-            filtered_results.append(result1)
+            filtered_results.append(result_1)
 
     return filtered_results
 
