@@ -1,6 +1,6 @@
 from enum import StrEnum
 from pydantic import BaseModel
-from pydantic_extra_types.coordinate import Coordinate
+from pydantic_extra_types.coordinate import Coordinate, Latitude, Longitude
 
 
 class SegmentationClass(StrEnum):
@@ -29,6 +29,13 @@ class Result(BaseModel):
     image: str
     mask: str
     distribution: dict[SegmentationClass, float]
+
+    @property
+    def coordinate(self) -> Coordinate:
+        filedata = self.image.split("_")
+        lat = Latitude(filedata[2])
+        lng = Longitude(filedata[3])
+        return Coordinate(latitude=lat, longitude=lng)
 
 
 class Mission(BaseModel):
