@@ -40,6 +40,6 @@ class Result(BaseModel):
 
 class Mission(BaseModel):
     id: str
-    start: Coordinate | None = None
+    start: Coordinate
     waypoints: list[Coordinate] = []
     results: list[Result] = []
