@@ -3,7 +3,7 @@ from pydantic_extra_types.coordinate import Coordinate
 
 
 class Mission(BaseModel):
-    id: str
+    id: str = ""
     start: Coordinate = None
     waypoints: list[Coordinate] = []
 

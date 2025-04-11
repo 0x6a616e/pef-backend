@@ -43,7 +43,13 @@ def distance_filter(results: list[Result]) -> list[Result]:
 
     for result1 in copied_results:
         point1 = extract_coordinate(result1)
-        if all(distance(point1, extract_coordinate(result2)) >= min_distance for result2 in filtered_results):
+        to_add = True
+        for result2 in filtered_results:
+            point2 = extract_coordinate(result2)
+            if distance(point1, point2) < min_distance:
+                to_add = False
+                break
+        if to_add:
             filtered_results.append(result1)
 
     return filtered_results

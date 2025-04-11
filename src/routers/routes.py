@@ -43,6 +43,7 @@ async def edit_route(request: Request, mission: Mission):
     global RESULTS_FILENAME
     global CURRENT_MISSION
 
+    mission.id = CURRENT_MISSION.id
     CURRENT_MISSION = optimize_route(mission)
     return JSONResponse(status_code=200, content=CURRENT_MISSION.model_dump())
 
