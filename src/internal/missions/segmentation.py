@@ -6,19 +6,13 @@ import numpy as np
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
+from .models import SegmentationClass, Result
+
 FOLDER_PATH = "images"
 MODEL_PATH = "models/UNet.pth"  # Cambiar por la ruta deseada
 NUM_CLASSES = 5
 OUTPUT_SIZE = (680, 382)  # width, height
 
-# Nombres de las clases
-CLASS_NAMES = {
-    0: "fondo",
-    1: "agua",
-    2: "suelo_expuesto",
-    3: "vegetacion_seca",
-    4: "vegetacion_verde"
-}
 
 # Colores en formato HEX para la visualización
 CLASS_COLORS_HEX = [
@@ -75,53 +69,36 @@ def compute_class_distribution(mask, num_classes=NUM_CLASSES, exclude_class_id=0
     total_pixels = np.sum(mask != exclude_class_id)
     class_distribution = {}
 
-    for class_id in range(1, num_classes):
-        class_pixel_count = np.sum(mask == class_id)
+    for segmentation_class in SegmentationClass:
+        class_pixel_count = np.sum(mask == segmentation_class.int_value)
         percentage = (class_pixel_count / total_pixels) * \
             100 if total_pixels > 0 else 0
-        class_distribution[CLASS_NAMES[class_id]] = round(percentage, 2)
+        class_distribution[segmentation_class.value] = round(percentage, 2)
 
     return class_distribution
 
 
-def should_discard(distribution: dict) -> bool:
-    suelo = distribution.get("Suelo Expuesto", 0)
-    agua = distribution.get("Agua", 0)
-    seca = distribution.get("Vegetacion Seca", 0)
-    verde = distribution.get("Vegetacion Verde", 0)
-
-    # Ajustar valores
-    if suelo > 50:
-        return True
-    if agua > 40:
-        return True
-    if seca == 0 and verde == 0:
-        return True
-
-    return False
-
-
-def segment_folder_images(folder: str) -> bool:
+def segment_folder_images(folder: str) -> list[Result]:
     if not folder.strip():
         print("El nombre de la carpeta no fue proporcionado correctamente.")
-        return False
+        return []
 
     full_path = os.path.join(FOLDER_PATH, folder)
 
     if os.path.exists(os.path.join(full_path, "resultados.json")):
         print("Esta carpeta ya fue procesada anteriormente.")
-        return False
+        return []
 
     if not os.path.exists(full_path):
         print(f"La carpeta '{folder}' no fue encontrada.")
-        return False
+        return []
 
     model, device = load_segmentation_model()
     images = load_images(full_path)
 
     if not images:
         print(f"La carpeta '{folder}' no contiene imágenes para procesar.")
-        return False
+        return []
 
     results = []
 
@@ -154,20 +131,19 @@ def segment_folder_images(folder: str) -> bool:
         #     continue
 
         # Agregar resultado válido
-        results.append({
-            "image": filename,
-            "mask": output_filename,
-            "class_distribution": class_distribution,
-        })
+        results.append(
+            Result(image=filename, mask=output_filename,
+                   distribution=class_distribution)
+        )
 
-    # Guardar resultados en archivo JSON
-    output_data = {
-        "results": results
-    }
-
-    json_output_path = os.path.join(full_path, "resultados.json")
-    with open(json_output_path, "w", encoding="utf-8") as f:
-        json.dump(output_data, f, ensure_ascii=False, indent=4)
+    # # Guardar resultados en archivo JSON
+    # output_data = {
+    #     "results": results
+    # }
+    #
+    # json_output_path = os.path.join(full_path, "resultados.json")
+    # with open(json_output_path, "w", encoding="utf-8") as f:
+    #     json.dump(output_data, f, ensure_ascii=False, indent=4)
 
     print(f"Se han procesado las imágenes en la carpeta: {folder}")
-    return True
+    return results

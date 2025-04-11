@@ -127,15 +127,10 @@ async def process():
     global RESULTS_FILENAME
     global CURRENT_MISSION
 
-    if not segment_folder_images(CURRENT_MISSION.id):
+    results = segment_folder_images(CURRENT_MISSION.id)
+    if not results:
         return Response(status_code=500)
-    filepath = f"{IMAGES_FOLDER}/{CURRENT_MISSION.id}/{RESULTS_FILENAME}"
-    results = list[Result]
-    ta = TypeAdapter(list[Result])
-    async with aiopen(filepath, "rb") as file:
-        content = await file.read()
-        results_dict = loads(content)
-        results = ta.validate_python(results_dict["results"])
+    print(results)
     filtered_results = DEFAULT_FILTER(results)
     if len(filtered_results) == 0:
         filtered_results = SOFT_FILTER(results)

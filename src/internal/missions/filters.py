@@ -1,6 +1,6 @@
 from collections.abc import Callable
 
-from .models import Result
+from .models import Result, SegmentationClass
 from .utils import extract_coordinate, distance
 
 Filter = Callable[[list[Result]], list[Result]]
@@ -18,9 +18,9 @@ def distribution_filter(results: list[Result]) -> list[Result]:
     filtered_results = []
 
     for result in results:
-        agua = result.class_distribution.agua
-        seca = result.class_distribution.vegetacion_seca
-        verde = result.class_distribution.vegetacion_verde
+        agua = result.distribution.get(SegmentationClass.AGUA)
+        seca = result.distribution.get(SegmentationClass.VEGETACION_SECA)
+        verde = result.distribution.get(SegmentationClass.VEGETACION_VERDE)
 
         if agua > 40:
             continue
@@ -33,7 +33,7 @@ def distribution_filter(results: list[Result]) -> list[Result]:
 
 def distance_filter(results: list[Result]) -> list[Result]:
     def sort_function(result: Result) -> float:
-        return result.class_distribution.vegetacion_seca
+        return result.distribution.get(SegmentationClass.VEGETACION_SECA)
 
     filtered_results = []
     min_distance = 10
