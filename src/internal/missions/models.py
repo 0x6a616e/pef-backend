@@ -11,17 +11,28 @@ class SegmentationClass(StrEnum):
     VEGETACION_VERDE = "4"
 
     @property
-    def int_value(self):
-        return int(self.value)
-
-
-class Mission(BaseModel):
-    id: str = ""
-    start: Coordinate = None
-    waypoints: list[Coordinate] = []
+    def color(self) -> str:
+        match self:
+            case SegmentationClass.FONDO:
+                return "#000000"
+            case SegmentationClass.AGUA:
+                return "#004fff"
+            case SegmentationClass.SUELO_EXPUESTO:
+                return "#ffffff"
+            case SegmentationClass.VEGETACION_SECA:
+                return "#8f9107"
+            case SegmentationClass.VEGETACION_VERDE:
+                return "#08920a"
 
 
 class Result(BaseModel):
     image: str
     mask: str
     distribution: dict[SegmentationClass, float]
+
+
+class Mission(BaseModel):
+    id: str
+    start: Coordinate | None = None
+    waypoints: list[Coordinate] = []
+    results: list[Result] = []
