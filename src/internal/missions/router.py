@@ -1,36 +1,21 @@
-from aiofiles import open as aiopen
-from fastapi import APIRouter, Request, UploadFile
-from fastapi.responses import JSONResponse, Response
-from json import loads
-from PIL import Image
+import aiofiles
+from fastapi import APIRouter, Response, UploadFile
+from fastapi.responses import JSONResponse
+import os
+from PIL import Image, ExifTags
 from PIL.ExifTags import TAGS, GPSTAGS
-from pydantic import TypeAdapter
-from os import mkdir
-from os.path import exists
+from pydantic_extra_types.coordinate import Coordinate
 from time import time
 from typing import BinaryIO
 from uuid import uuid4
-from fastapi import APIRouter, Response
-from fastapi.responses import JSONResponse
-from pydantic_extra_types.coordinate import Coordinate
 
-from .ai import segment_folder_images
-from .filters import DEFAULT_FILTER, SOFT_FILTER
-from .models import Mission, Result
-from .utils import optimize_route, extract_coordinate
+from .config import settings
 from .database import query_current_mission, insert_mission, update_mission
 from .models import Mission
 from .routing import optimize_route
 
 
-# Change this section
-IMAGES_FOLDER = "images"
-RESULTS_FILENAME = "resultados.json"
-CURRENT_MISSION = Mission(id=uuid4().hex)
-
 router = APIRouter(
-    prefix="/routes",
-    tags=["routes"],
     prefix="/missions",
     tags=["missions"]
 )
@@ -61,6 +46,12 @@ async def edit_route(mission: Mission):
     if current_mission is None:
         return Response(status_code=502)
 
+    current_mission.waypoints = mission.waypoints
+    current_mission = optimize_route(current_mission)
+    await update_mission(current_mission)
+    return JSONResponse(status_code=200, content=current_mission.model_dump())
+
+
 def convert_to_degrees(value):
     def to_float(x):
         return float(x[0]) / float(x[1]) if isinstance(x, tuple) else float(x)
@@ -72,27 +63,21 @@ def convert_to_degrees(value):
         return None
 
 
-def process_drone_image(file: BinaryIO) -> None:
-    global IMAGES_FOLDER
-    global RESULTS_FILENAME
-    global CURRENT_MISSION
-
+async def process_drone_image(file: BinaryIO) -> None:
     image = Image.open(file)
 
-    optimal_size = (680, 382)
+    optimal_size = settings.image_size
     resized_image = image.resize(optimal_size)
 
-    exif = image._getexif()
+    exif = image.getexif()
     if not exif:
         return
 
     gps_data = {}
-    for tag, value in exif.items():
-        decoded = TAGS.get(tag, tag)
-        if decoded == "GPSInfo":
-            for t in value:
-                sub_decoded = GPSTAGS.get(t, t)
-                gps_data[sub_decoded] = value[t]
+    gps_ifd = exif.get_ifd(ExifTags.IFD.GPSInfo)
+    for k in gps_ifd:
+        sub_decoded = GPSTAGS.get(k, k)
+        gps_data[sub_decoded] = gps_ifd[k]
 
     if "GPSLatitude" not in gps_data or "GPSLongitude" not in gps_data:
         return
@@ -108,49 +93,66 @@ def process_drone_image(file: BinaryIO) -> None:
     if gps_data.get("GPSLongitudeRef") == "W":
         lng = -lng
 
-    path = f"{IMAGES_FOLDER}/{CURRENT_MISSION.id}"
+    current_mission = await query_current_mission()
+    if current_mission is None:
+        return
     filename = f"drone_{time()}_{lat}_{lng}_.jpg"
+    fullpath = os.path.join(
+        settings.images_folder,
+        current_mission.foldername,
+        filename
+    )
 
-    resized_image.save(f"{path}/{filename}")
+    resized_image.save(fullpath)
 
 
 @router.post("/uploadfile/{source}")
 async def upload_file(source: str, file: UploadFile):
-    global IMAGES_FOLDER
-    global RESULTS_FILENAME
-    global CURRENT_MISSION
+    current_mission = await query_current_mission()
+    if current_mission is None:
+        return Response(status_code=502)
 
-    path = f"{IMAGES_FOLDER}/{CURRENT_MISSION.id}"
-    if not exists(path):
-        mkdir(path)
+    path = os.path.join(
+        settings.images_folder,
+        current_mission.foldername
+    )
+
+    if not os.path.exists(path):
+        os.mkdir(path)
     if (source == "drone"):
-        process_drone_image(file.file)
+        await process_drone_image(file.file)
     else:
         filename: str = f"{source}_{time()}_.jpg"
-        async with aiopen(f"{path}/{filename}", "wb") as of:
+        async with aiofiles.open(f"{path}/{filename}", "wb") as of:
             while content := await file.read(1024):
                 await of.write(content)
 
     return Response(status_code=200)
 
 
-@router.get("/process")
-async def process():
-    global IMAGES_FOLDER
-    global RESULTS_FILENAME
-    global CURRENT_MISSION
-
-    results = segment_folder_images(CURRENT_MISSION.id)
-    if not results:
-        return Response(status_code=500)
-    print(results)
-    filtered_results = DEFAULT_FILTER(results)
-    if len(filtered_results) == 0:
-        filtered_results = SOFT_FILTER(results)
-    mission = CURRENT_MISSION
-    mission.id = uuid4().hex
-    for result in filtered_results:
-        coord = extract_coordinate(result)
-        mission.waypoints.append(coord)
-    CURRENT_MISSION = mission
-    return JSONResponse(status_code=200, content=CURRENT_MISSION.model_dump())
+# @router.get("/process")
+# async def process():
+#     global IMAGES_FOLDER
+#     global RESULTS_FILENAME
+#     global CURRENT_MISSION
+#
+#     results = segment_folder_images(CURRENT_MISSION.id)
+#     if not results:
+#         return Response(status_code=500)
+#     filepath = f"{IMAGES_FOLDER}/{CURRENT_MISSION.id}/{RESULTS_FILENAME}"
+#     ta = TypeAdapter(list[Result])
+#     async with aiopen(filepath, "rb") as file:
+#         content = await file.read()
+#         results_dict = loads(content)
+#         results = ta.validate_python(results_dict["results"])
+#     print(results)
+#     filtered_results = DEFAULT_FILTER(results)
+#     if len(filtered_results) == 0:
+#         filtered_results = SOFT_FILTER(results)
+#     mission = CURRENT_MISSION
+#     mission.id = uuid4().hex
+#     for result in filtered_results:
+#         coord = extract_coordinate(result)
+#         mission.waypoints.append(coord)
+#     CURRENT_MISSION = mission
+#     return JSONResponse(status_code=200, content=CURRENT_MISSION.model_dump())
