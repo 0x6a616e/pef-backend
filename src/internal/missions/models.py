@@ -1,5 +1,6 @@
 from enum import StrEnum
-from pydantic import BaseModel
+from typing import Annotated
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 from pydantic_extra_types.coordinate import Coordinate, Latitude, Longitude
 
 
@@ -38,8 +39,17 @@ class Result(BaseModel):
         return Coordinate(latitude=lat, longitude=lng)
 
 
+PyObjectId = Annotated[str, BeforeValidator(str)]
+
+
 class Mission(BaseModel):
-    id: str
+    id: PyObjectId | None = Field(alias="_id", default=None)
+    foldername: str
     start: Coordinate
     waypoints: list[Coordinate] = []
     results: list[Result] = []
+
+    model_config = ConfigDict(
+        arbitrary_types_allowed=True,
+        populate_by_name=True,
+    )
