@@ -10,11 +10,17 @@ from os.path import exists
 from time import time
 from typing import BinaryIO
 from uuid import uuid4
+from fastapi import APIRouter, Response
+from fastapi.responses import JSONResponse
+from pydantic_extra_types.coordinate import Coordinate
 
 from .ai import segment_folder_images
 from .filters import DEFAULT_FILTER, SOFT_FILTER
 from .models import Mission, Result
 from .utils import optimize_route, extract_coordinate
+from .database import query_current_mission, insert_mission, update_mission
+from .models import Mission
+from .routing import optimize_route
 
 
 # Change this section
@@ -25,28 +31,35 @@ CURRENT_MISSION = Mission(id=uuid4().hex)
 router = APIRouter(
     prefix="/routes",
     tags=["routes"],
+    prefix="/missions",
+    tags=["missions"]
 )
 
 
-@router.get("/get", response_model=Mission)
-async def read_route(request: Request):
-    global IMAGES_FOLDER
-    global RESULTS_FILENAME
-    global CURRENT_MISSION
+@router.post("/initialize")
+async def initialize_missions(start: Coordinate):
+    mission = Mission(
+        start=start,
+        foldername=uuid4().hex
+    )
+    await insert_mission(mission)
+    return Response(status_code=200)
 
-    return JSONResponse(status_code=200, content=CURRENT_MISSION.model_dump())
+
+@router.get("/get", response_model=Mission)
+async def get_current_mission():
+    mission = await query_current_mission()
+    if mission is None:
+        return Response(status_code=502)
+
+    return JSONResponse(status_code=200, content=mission.model_dump())
 
 
 @router.post("/edit", response_model=Mission)
-async def edit_route(request: Request, mission: Mission):
-    global IMAGES_FOLDER
-    global RESULTS_FILENAME
-    global CURRENT_MISSION
-
-    mission.id = CURRENT_MISSION.id
-    CURRENT_MISSION = optimize_route(mission)
-    return JSONResponse(status_code=200, content=CURRENT_MISSION.model_dump())
-
+async def edit_route(mission: Mission):
+    current_mission = await query_current_mission()
+    if current_mission is None:
+        return Response(status_code=502)
 
 def convert_to_degrees(value):
     def to_float(x):
