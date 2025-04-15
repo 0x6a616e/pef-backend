@@ -44,7 +44,7 @@ PyObjectId = Annotated[str, BeforeValidator(str)]
 
 class Mission(BaseModel):
     id: PyObjectId | None = Field(alias="_id", default=None)
-    foldername: str
+    foldername: str = ""
     start: Coordinate
     waypoints: list[Coordinate] = []
     results: list[Result] = []

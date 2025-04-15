@@ -12,8 +12,7 @@ mission_collection = db.get_collection("missions")
 async def query_current_mission() -> Mission | None:
     mission = await mission_collection.find_one(
         {},
-        {},
-        {"$sort": {"_id": -1}}
+        sort=[("_id", -1)]
     )
     if mission is not None:
         mission = Mission.model_validate(mission)
@@ -31,6 +30,6 @@ async def insert_mission(mission: Mission) -> None:
 
 async def update_mission(mission: Mission) -> None:
     await mission_collection.find_one_and_update(
-        {"_id": ObjectId},
+        {"_id": ObjectId(mission.id)},
         {"$set": mission.model_dump(exclude={"id"})},
     )
