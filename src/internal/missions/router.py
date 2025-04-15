@@ -3,7 +3,7 @@ from fastapi import APIRouter, Response, UploadFile
 from fastapi.responses import JSONResponse
 import os
 from PIL import Image, ExifTags
-from PIL.ExifTags import TAGS, GPSTAGS
+from PIL.ExifTags import GPSTAGS
 from pydantic_extra_types.coordinate import Coordinate
 from time import time
 from typing import BinaryIO
@@ -11,8 +11,10 @@ from uuid import uuid4
 
 from .config import settings
 from .database import query_current_mission, insert_mission, update_mission
+from .filters import DEFAULT_FILTER, SOFT_FILTER
 from .models import Mission
 from .routing import optimize_route
+from .segmentation import segment_folder
 
 
 router = APIRouter(
@@ -130,29 +132,29 @@ async def upload_file(source: str, file: UploadFile):
     return Response(status_code=200)
 
 
-# @router.get("/process")
-# async def process():
-#     global IMAGES_FOLDER
-#     global RESULTS_FILENAME
-#     global CURRENT_MISSION
-#
-#     results = segment_folder_images(CURRENT_MISSION.id)
-#     if not results:
-#         return Response(status_code=500)
-#     filepath = f"{IMAGES_FOLDER}/{CURRENT_MISSION.id}/{RESULTS_FILENAME}"
-#     ta = TypeAdapter(list[Result])
-#     async with aiopen(filepath, "rb") as file:
-#         content = await file.read()
-#         results_dict = loads(content)
-#         results = ta.validate_python(results_dict["results"])
-#     print(results)
-#     filtered_results = DEFAULT_FILTER(results)
-#     if len(filtered_results) == 0:
-#         filtered_results = SOFT_FILTER(results)
-#     mission = CURRENT_MISSION
-#     mission.id = uuid4().hex
-#     for result in filtered_results:
-#         coord = extract_coordinate(result)
-#         mission.waypoints.append(coord)
-#     CURRENT_MISSION = mission
-#     return JSONResponse(status_code=200, content=CURRENT_MISSION.model_dump())
+@router.get("/process")
+async def process():
+    current_mission = await query_current_mission()
+    if current_mission is None:
+        return Response(status_code=502)
+
+    results = segment_folder(current_mission.foldername)
+    if not results:
+        return Response(status_code=502)
+
+    filtered_results = DEFAULT_FILTER(results)
+    if len(filtered_results) == 0:
+        filtered_results = SOFT_FILTER(results)
+
+    current_mission.results = filtered_results
+    await update_mission(current_mission)
+
+    new_mission = Mission(
+        start=current_mission.start,
+        foldername=uuid4().hex
+    )
+    for result in filtered_results:
+        coord = result.coordinate
+        new_mission.waypoints.append(coord)
+    await insert_mission(new_mission)
+    return JSONResponse(status_code=200, content=new_mission.model_dump())
