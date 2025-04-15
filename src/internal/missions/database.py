@@ -9,7 +9,7 @@ db = client.get_database("pef")
 mission_collection = db.get_collection("missions")
 
 
-async def get_current_mission() -> Mission | None:
+async def query_current_mission() -> Mission | None:
     mission = await mission_collection.find_one(
         {},
         {},
