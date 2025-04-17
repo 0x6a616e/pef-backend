@@ -17,10 +17,7 @@ from .routing import optimize_route
 from .segmentation import segment_folder
 
 
-router = APIRouter(
-    prefix="/missions",
-    tags=["missions"]
-)
+router = APIRouter()
 
 
 @router.post("/initialize")
