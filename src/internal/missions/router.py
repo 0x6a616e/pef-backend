@@ -153,5 +153,6 @@ async def process():
     for result in filtered_results:
         coord = result.coordinate
         new_mission.waypoints.append(coord)
+    new_mission = optimize_route(new_mission)
     await insert_mission(new_mission)
     return JSONResponse(status_code=200, content=new_mission.model_dump())
