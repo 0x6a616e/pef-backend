@@ -1,8 +1,10 @@
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.templating import Jinja2Templates
+import os
 
+from .internal.missions.config import settings
 from .internal.missions.database import query_mission_list, query_mission
 from .internal.missions.router import router as mission_router
 
@@ -24,6 +26,16 @@ app.add_middleware(
 
 
 templates = Jinja2Templates(directory="src/templates")
+
+
+@app.get("/image/{folder}/{filename}", response_class=FileResponse)
+async def get_image(folder: str, filename: str):
+    filepath = os.path.join(
+        settings.images_folder,
+        folder,
+        filename
+    )
+    return filepath
 
 
 @app.get("/map/{mission_id}", response_class=HTMLResponse)
@@ -48,6 +60,6 @@ async def index(request: Request):
         request=request,
         name="index.html",
         context={
-            "ids": id_list
+            "ids": id_list[1:]
         }
     )

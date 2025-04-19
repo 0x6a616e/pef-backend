@@ -1,8 +1,33 @@
 <script id="script_tag">
     map.setView([{{mission.start.latitude}}, {{mission.start.longitude}}], 13);
     markerGroup.clearLayers();
-    {% for waypoint in mission.waypoints %}
-    var marker = L.marker([{{waypoint.latitude}}, {{waypoint.longitude}}]);
+    {% for result in mission.results %}
+    var marker = L.marker([{{result.coordinate.latitude}}, {{result.coordinate.longitude}}]);
+    var content = `
+    <p class="text-sm font-medium">
+        Latitud: {{result.coordinate.latitude}}<br/>
+        Longitud: {{result.coordinate.longitude}}<br/>
+        Porcentaje de agua: {{result.distribution["1"]}}%<br/>
+        Porcentaje de suelo expuesto: {{result.distribution["2"]}}%<br/>
+        Porcentaje de vegetación seca: {{result.distribution["3"]}}%<br/>
+        Porcentaje de vegetación verde: {{result.distribution["4"]}}%<br/>
+    </p>
+    <div x-data="{ current: 1 }">
+        <img 
+            x-show="current === 1" 
+            @click="current = 2" 
+            src="/image/{{mission.foldername}}/{{result.image}}"
+            alt="Imagen RGB"
+        >
+        <img
+            x-show="current === 2"
+            @click="current = 1"
+            src="/image/{{mission.foldername}}/{{result.mask}}" 
+            alt="Máscara"
+        >
+    </div>
+    `
+    marker.bindPopup(content);
     markerGroup.addLayer(marker);
     {% endfor %}
 </script>
