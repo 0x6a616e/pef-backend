@@ -1,0 +1,8 @@
+<script id="script_tag">
+    map.setView([{{mission.start.latitude}}, {{mission.start.longitude}}], 13);
+    markerGroup.clearLayers();
+    {% for waypoint in mission.waypoints %}
+    var marker = L.marker([{{waypoint.latitude}}, {{waypoint.longitude}}]);
+    markerGroup.addLayer(marker);
+    {% endfor %}
+</script>

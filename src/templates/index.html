@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PEF</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"
+        integrity="sha384-HGfztofotfshcF7+8n44JQL2oJmowVChPTg48S+jvZoztPfvwD79OC/LTtG6dMp+"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body class="h-screen w-screen overflow-hidden">
+    <!-- Map background -->
+    <div id="map" class="z-0"></div>
+    <!-- Dropdown -->
+    <div class="fixed top-0 right-0 z-50 m-4" x-data="{ open: false, selected: '{{ ids[0] }}' }"
+        @click.outside="open = false" hx-trigger="load" hx-get="/map/{{ids[0]}}" hx-target="#script_tag">
+        <!-- Button -->
+        <button @click="open = !open"
+            class="w-64 text-left px-4 py-2 bg-white border border-gray-300 rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <div class="text-sm font-medium" x-text="selected"></div>
+            <div class="text-xs text-gray-500">Elegir misión</div>
+        </button>
+        <!-- Dropdown List -->
+        <div x-show="open" x-transition
+            class="mt-1 w-64 bg-white border border-gray-300 rounded shadow max-h-60 overflow-y-auto scroll-smooth">
+            {% for id in ids %}
+            <div @click="selected = '{{ id }}'; open = false" hx-get="/map/{{id}}" hx-target="#script_tag"
+                hx-swap="outerHTML" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                <div class="text-sm font-medium">{{ id }}</div>
+                <div class="text-xs text-gray-500">Subtext</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <!-- Leaflet map initialization -->
+    <script>
+        const map = L.map('map').setView([0, 0], 13); // Example: NYC
+        const markerGroup = L.layerGroup().addTo(map);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+    </script>
+    <script id="script_tag">
+    </script>
+</body>
+
+</html>
