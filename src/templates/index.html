@@ -36,8 +36,8 @@
     <!-- Map background -->
     <div id="map" class="z-0"></div>
     <!-- Dropdown -->
-    <div class="fixed top-0 right-0 z-50 m-4" x-data="{ open: false, selected: '{{ ids[0] }}' }"
-        @click.outside="open = false" hx-trigger="load" hx-get="/map/{{ids[0]}}" hx-target="#script_tag">
+    <div class="fixed top-0 right-0 z-50 m-4" x-data="{ open: false, selected: '{{ data_list[0][0] }}' }"
+        @click.outside="open = false" hx-trigger="load" hx-get="/map/{{data_list[0][0]}}" hx-target="#script_tag">
         <!-- Button -->
         <button @click="open = !open"
             class="w-64 text-left px-4 py-2 bg-white border border-gray-300 rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -47,11 +47,11 @@
         <!-- Dropdown List -->
         <div x-show="open" x-transition
             class="mt-1 w-64 bg-white border border-gray-300 rounded shadow max-h-60 overflow-y-auto scroll-smooth">
-            {% for id in ids %}
+            {% for id, t in data_list %}
             <div @click="selected = '{{ id }}'; open = false" hx-get="/map/{{id}}" hx-target="#script_tag"
                 hx-swap="outerHTML" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
                 <div class="text-sm font-medium">{{ id }}</div>
-                <div class="text-xs text-gray-500">Subtext</div>
+                <div class="text-xs text-gray-500">{{ t }}</div>
             </div>
             {% endfor %}
         </div>

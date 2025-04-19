@@ -1,3 +1,5 @@
+from bson import ObjectId
+from dateutil import tz
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, FileResponse
@@ -56,10 +58,17 @@ async def get_map(request: Request, mission_id: str):
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     id_list = await query_mission_list()
+    local_tz = tz.gettz("America/Monterrey")
+    proccesed_list = []
+    for id in id_list:
+        t = ObjectId(id).generation_time.astimezone(
+            local_tz).strftime("%d/%m/%y - %H:%M")
+        proccesed_list.append((id, t))
+
     return templates.TemplateResponse(
         request=request,
         name="index.html",
         context={
-            "ids": id_list[1:]
+            "data_list": proccesed_list[1:]
         }
     )
