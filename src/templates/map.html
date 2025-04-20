@@ -18,12 +18,14 @@
             @click="current = 2" 
             src="/image/{{mission.foldername}}/{{result.image}}"
             alt="Imagen RGB"
+            class="cursor-pointer"
         >
         <img
             x-show="current === 2"
             @click="current = 1"
             src="/image/{{mission.foldername}}/{{result.mask}}" 
             alt="Máscara"
+            class="cursor-pointer"
         >
     </div>
     `
