@@ -1,7 +1,8 @@
 from math import pi, sin, cos, atan2, sqrt
-from pydantic_extra_types.coordinate import Coordinate
+from pydantic_extra_types.coordinate import Coordinate, Latitude, Longitude
 from ortools.constraint_solver import routing_enums_pb2, pywrapcp
 
+from .config import settings
 from .models import Mission
 
 
@@ -63,3 +64,40 @@ def optimize_route(mission: Mission) -> Mission:
         mission.waypoints = waypoints
 
     return mission
+
+
+def middle_point(point1: Coordinate, point2: Coordinate) -> Coordinate:
+    lng = Longitude((point1.longitude + point2.longitude) / 2)
+    lat = Latitude((point1.latitude + point2.latitude) / 2)
+    return Coordinate(latitude=lat, longitude=lng)
+
+
+def divide_line(points: list[Coordinate], idx1: int, idx2: int) -> None:
+    point1 = points[idx1]
+    point2 = points[idx2]
+    if (distance(point1, point2) < 2 * settings.min_distance):
+        return
+    middle = middle_point(point1, point2)
+    points.insert(idx2, middle)
+    divide_line(points, idx2, idx2 + 1)
+    divide_line(points, idx1, idx2)
+
+
+def process_area(points: list[Coordinate]) -> list[Coordinate]:
+    lats = []
+    lngs = []
+    for point in points:
+        lats.append(point.latitude)
+        lngs.append(point.longitude)
+    lats.sort()
+    lngs.sort()
+    ul = Coordinate(latitude=lats[-1], longitude=lngs[0])
+    ur = Coordinate(latitude=lats[-1], longitude=lngs[-1])
+    bl = Coordinate(latitude=lats[0], longitude=lngs[0])
+    br = Coordinate(latitude=lats[0], longitude=lngs[-1])
+    ll = [bl, ul]
+    rl = [br, ur]
+    divide_line(ll, 0, 1)
+    divide_line(rl, 0, 1)
+    proccesed_list = [item for pair in zip(ll, rl) for item in pair]
+    return proccesed_list

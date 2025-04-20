@@ -13,7 +13,7 @@ from .config import settings
 from .database import query_current_mission, insert_mission, update_mission
 from .filters import DEFAULT_FILTER, SOFT_FILTER
 from .models import Mission
-from .routing import optimize_route
+from .routing import optimize_route, process_area
 from .segmentation import segment_folder
 
 
@@ -51,18 +51,31 @@ async def edit_route(mission: Mission):
     return JSONResponse(status_code=200, content=current_mission.model_dump())
 
 
-def convert_to_degrees(value):
-    def to_float(x):
-        return float(x[0]) / float(x[1]) if isinstance(x, tuple) else float(x)
-
-    try:
-        d, m, s = value
-        return to_float(d) + to_float(m) / 60 + to_float(s) / 3600
-    except Exception:
-        return None
+@router.post("/area")
+async def handle_area(mission: Mission):
+    mission.waypoints = process_area(mission.waypoints)
+    return JSONResponse(status_code=200, content=mission.model_dump())
+    # current_mission = await query_current_mission()
+    # if current_mission is None:
+    #     return Response(status_code=502)
+    #
+    # current_mission.waypoints = process_area(points)
+    # current_mission = optimize_route(current_mission)
+    # await update_mission(current_mission)
+    # return JSONResponse(status_code=200, content=current_mission.model_dump())
 
 
 async def process_drone_image(file: BinaryIO) -> None:
+    def convert_to_degrees(value):
+        def to_float(x):
+            return float(x[0]) / float(x[1]) if isinstance(x, tuple) else float(x)
+
+        try:
+            d, m, s = value
+            return to_float(d) + to_float(m) / 60 + to_float(s) / 3600
+        except Exception:
+            return None
+
     image = Image.open(file)
 
     optimal_size = settings.image_size
