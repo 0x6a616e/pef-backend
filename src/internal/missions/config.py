@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     images_folder: str = ""
     mongo_url: str = ""
     image_size: tuple[int, int] = (680, 382)
+    min_distance: int = 15
 
 
 settings = Settings()

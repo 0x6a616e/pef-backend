@@ -1,5 +1,6 @@
 from collections.abc import Callable
 
+from .config import settings
 from .models import Result, SegmentationClass
 from .routing import distance
 
@@ -36,7 +37,6 @@ def distance_filter(results: list[Result]) -> list[Result]:
         return result.distribution.get(SegmentationClass.VEGETACION_SECA, 0)
 
     filtered_results: list[Result] = []
-    min_distance = 15
 
     copied_results = results
     copied_results.sort(reverse=True, key=sort_key)
@@ -46,7 +46,7 @@ def distance_filter(results: list[Result]) -> list[Result]:
         to_add = True
         for result_2 in filtered_results:
             point2 = result_2.coordinate
-            if distance(point1, point2) < min_distance:
+            if distance(point1, point2) < settings.min_distance:
                 to_add = False
                 break
         if to_add:
