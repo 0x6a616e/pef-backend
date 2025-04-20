@@ -53,16 +53,13 @@ async def edit_route(mission: Mission):
 
 @router.post("/area")
 async def handle_area(mission: Mission):
-    mission.waypoints = process_area(mission.waypoints)
-    return JSONResponse(status_code=200, content=mission.model_dump())
-    # current_mission = await query_current_mission()
-    # if current_mission is None:
-    #     return Response(status_code=502)
-    #
-    # current_mission.waypoints = process_area(points)
-    # current_mission = optimize_route(current_mission)
-    # await update_mission(current_mission)
-    # return JSONResponse(status_code=200, content=current_mission.model_dump())
+    current_mission = await query_current_mission()
+    if current_mission is None:
+        return Response(status_code=502)
+
+    current_mission.waypoints = process_area(mission.waypoints)
+    await update_mission(current_mission)
+    return JSONResponse(status_code=200, content=current_mission.model_dump())
 
 
 async def process_drone_image(file: BinaryIO) -> None:
