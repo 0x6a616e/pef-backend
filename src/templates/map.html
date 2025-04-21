@@ -12,20 +12,16 @@
         Porcentaje de vegetación seca: {{result.distribution["3"]}}%<br/>
         Porcentaje de vegetación verde: {{result.distribution["4"]}}%<br/>
     </p>
-    <div x-data="{ current: 1 }">
+    <div class="image-container">
         <img 
-            x-show="current === 1" 
-            @click="current = 2" 
             src="/image/{{mission.foldername}}/{{result.image}}"
             alt="Imagen RGB"
-            class="cursor-pointer"
+            class="back-img"
         >
         <img
-            x-show="current === 2"
-            @click="current = 1"
             src="/image/{{mission.foldername}}/{{result.mask}}" 
             alt="Máscara"
-            class="cursor-pointer"
+            class="front-img"
         >
     </div>
     `
