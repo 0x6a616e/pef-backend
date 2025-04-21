@@ -75,7 +75,7 @@ def middle_point(point1: Coordinate, point2: Coordinate) -> Coordinate:
 def divide_line(points: list[Coordinate], idx1: int, idx2: int) -> None:
     point1 = points[idx1]
     point2 = points[idx2]
-    if (distance(point1, point2) < 2 * settings.min_distance):
+    if (distance(point1, point2) < settings.min_distance):
         return
     middle = middle_point(point1, point2)
     points.insert(idx2, middle)
