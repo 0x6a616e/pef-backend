@@ -100,4 +100,8 @@ def process_area(points: list[Coordinate]) -> list[Coordinate]:
     divide_line(ll, 0, 1)
     divide_line(rl, 0, 1)
     proccesed_list = [item for pair in zip(ll, rl) for item in pair]
+    for i in range(2, len(proccesed_list), 4):
+        tmp = proccesed_list[i]
+        proccesed_list[i] = proccesed_list[i + 1]
+        proccesed_list[i + 1] = tmp
     return proccesed_list
