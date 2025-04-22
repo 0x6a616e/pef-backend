@@ -26,18 +26,22 @@
             width: 100%;
         }
 
-        .image-container {
+        .image-container,
+        .modal-image-container {
             display: grid;
         }
 
         .front-img,
-        .back-img {
+        .back-img,
+        .modal-front-img,
+        .modal-back-img {
             width: 100%;
             height: auto;
             grid-area: 1 / 1;
         }
 
-        .back-img {
+        .back-img,
+        .modal-back-img {
             pointer-events: none;
             clip-path: circle(0px at 0px 0px);
             transition: clip-path 0s;
@@ -45,13 +49,19 @@
     </style>
 </head>
 
-<body class="h-screen w-screen overflow-hidden">
+<body class="h-screen w-screen overflow-hidden" x-data="{ modal_open: false }">
     <!-- Map background -->
+    <div x-show="modal_open" x-transition class="fixed inset-0 backdrop-blur-xl flex items-center justify-center z-50">
+        <div class="modal-image-container" @click.away="modal_open = false">
+            <img alt="Full RGB Image" class="modal-back-img max-h-[90vh] max-w-[90vw]">
+            <img alt="Full Mask Image" class="modal-front-img max-h-[90vh] max-w-[90vw]">
+        </div>
+    </div>
     <div id="map" class="z-0"></div>
     <!-- Dropdown -->
-    <div class="fixed top-0 right-0 z-50 m-4" x-data="{ open: false, selected: '{{ data_list[0][0] }}' }"
-        @click.outside="open = false" hx-trigger="load" hx-get="/map/{{data_list[0][0]}}" hx-target="#script_tag"
-        hx-swap="outerHTML">
+    <div class="fixed top-0 right-0 z-50 m-4" x-show="!modal_open"
+        x-data="{ open: false, selected: '{{ data_list[0][0] }}' }" @click.outside="open = false" hx-trigger="load"
+        hx-get="/map/{{data_list[0][0]}}" hx-target="#script_tag" hx-swap="outerHTML">
         <!-- Button -->
         <button @click="open = !open"
             class="w-64 text-left px-4 py-2 bg-white border border-gray-300 rounded shadow focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
@@ -94,8 +104,31 @@
             container.addEventListener('mouseleave', () => {
                 backImg.style.clipPath = 'circle(0px at 0px 0px)';
             });
-
         });
+
+        function updateSrc() {
+            const backImg = document.querySelector('.back-img');
+            const frontImg = document.querySelector('.front-img');
+
+            const modalContainer = document.querySelector('.modal-image-container');
+            const modalBackImg = document.querySelector('.modal-back-img');
+            const modalFrontImg = document.querySelector('.modal-front-img');
+
+            modalBackImg.src = backImg.src;
+            modalFrontImg.src = frontImg.src;
+
+            modalContainer.addEventListener('mousemove', (e) => {
+                const rect = modalContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                modalBackImg.style.clipPath = `circle(20% at ${x}px ${y}px)`;
+            });
+
+            modalContainer.addEventListener('mouseleave', () => {
+                modalBackImg.style.clipPath = 'circle(0px at 0px 0px)';
+            });
+        }
     </script>
     <script id="script_tag">
     </script>

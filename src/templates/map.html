@@ -12,7 +12,7 @@
         Porcentaje de vegetación seca: {{result.distribution["3"]}}%<br/>
         Porcentaje de vegetación verde: {{result.distribution["4"]}}%<br/>
     </p>
-    <div class="image-container">
+    <div class="image-container cursor-pointer" @click="modal_open = true ; updateSrc()">
         <img 
             src="/image/{{mission.foldername}}/{{result.image}}"
             alt="Imagen RGB"
