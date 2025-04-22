@@ -2,7 +2,9 @@
     map.setView([{{mission.start.latitude}}, {{mission.start.longitude}}], 13);
     markerGroup.clearLayers();
     {% for result in mission.results %}
-    var marker = L.marker([{{result.coordinate.latitude}}, {{result.coordinate.longitude}}]);
+    var marker = L.marker(
+        [{{result.coordinate.latitude}}, {{result.coordinate.longitude}}],
+    );
     var content = `
     <p class="text-sm font-medium">
         Latitud: {{result.coordinate.latitude}}<br/>
