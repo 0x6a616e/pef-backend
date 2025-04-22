@@ -13,17 +13,19 @@ from .internal.missions.router import router as mission_router
 app = FastAPI(
     title="PEF",
 )
-app.include_router(
-    mission_router,
-    prefix="/api/missions",
-    tags=["api/missions"]
-)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.include_router(
+    mission_router,
+    prefix="/api/missions",
+    tags=["api/missions"]
 )
 
 
