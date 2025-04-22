@@ -95,17 +95,31 @@
         map.on("popupopen", () => {
             const container = document.querySelector('.image-container');
             const backImg = document.querySelector('.back-img');
+            let overlaySize = 20;
 
             container.addEventListener('mousemove', (e) => {
                 const rect = container.getBoundingClientRect();
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
 
-                backImg.style.clipPath = `circle(20% at ${x}px ${y}px)`;
+                backImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
             });
 
             container.addEventListener('mouseleave', () => {
                 backImg.style.clipPath = 'circle(0px at 0px 0px)';
+            });
+
+            container.addEventListener("wheel", (e) => {
+                const rect = container.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                if (e.deltaY > 0) {
+                    overlaySize = Math.max(0, overlaySize - 1);
+                } else {
+                    overlaySize = Math.min(100, overlaySize + 1);
+                }
+                backImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
             });
         });
 
@@ -117,6 +131,8 @@
             const modalBackImg = document.querySelector('.modal-back-img');
             const modalFrontImg = document.querySelector('.modal-front-img');
 
+            let overlaySize = 20;
+
             modalBackImg.src = backImg.src;
             modalFrontImg.src = frontImg.src;
 
@@ -125,7 +141,20 @@
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
 
-                modalBackImg.style.clipPath = `circle(20% at ${x}px ${y}px)`;
+                modalBackImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
+            });
+
+            modalContainer.addEventListener("wheel", (e) => {
+                const rect = modalContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                if (e.deltaY > 0) {
+                    overlaySize = Math.max(0, overlaySize - 1);
+                } else {
+                    overlaySize = Math.min(100, overlaySize + 1);
+                }
+                modalBackImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
             });
 
             modalContainer.addEventListener('mouseleave', () => {
