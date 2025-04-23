@@ -11,8 +11,8 @@ from uuid import uuid4
 
 from .config import settings
 from .database import query_current_mission, insert_mission, update_mission
-from .filters import DEFAULT_FILTER, SOFT_FILTER
 from .models import Mission
+from .filters import compose, greater_than, less_than, distance_filter
 from .routing import optimize_route, process_area
 from .segmentation import segment_folder
 
