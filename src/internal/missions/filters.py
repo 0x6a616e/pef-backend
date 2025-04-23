@@ -4,8 +4,8 @@ from .config import settings
 from .models import Result, SegmentationClass
 from .routing import distance
 
-Filter = Callable[[list[Result]], list[Result]]
 
+Filter = Callable[[list[Result]], list[Result]]
 
 def create_stack(*filters: Filter) -> Filter:
     def stack(results: list[Result]) -> list[Result]:
@@ -22,6 +22,14 @@ def distribution_filter(results: list[Result]) -> list[Result]:
         agua = result.distribution.get(SegmentationClass.AGUA, 0)
         seca = result.distribution.get(SegmentationClass.VEGETACION_SECA, 0)
         verde = result.distribution.get(SegmentationClass.VEGETACION_VERDE, 0)
+def less_than(field: SegmentationClass, value: int):
+    def c(rs: list[Result]) -> list[Result]:
+        results = []
+        for r in rs:
+            if r.distribution[field] <= value:
+                results.append(r)
+        return results
+    return c
 
         if agua > 40:
             continue
