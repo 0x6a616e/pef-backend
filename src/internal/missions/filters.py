@@ -37,8 +37,8 @@ def greater_than(field: SegmentationClass, value: int):
 
 
 def distance_filter(results: list[Result]) -> list[Result]:
-    def sort_key(result: Result) -> float:
-        return result.distribution.get(SegmentationClass.VEGETACION_SECA, 0)
+    def sort_key(r: Result) -> float:
+        return r.distribution.get(SegmentationClass.VEGETACION_SECA, 0)
 
     filtered_results: list[Result] = []
 
