@@ -11,8 +11,8 @@ from uuid import uuid4
 
 from .config import settings
 from .database import query_current_mission, insert_mission, update_mission
-from .models import Mission
 from .filters import compose, greater_than, less_than, distance_filter
+from .models import Mission, SegmentationClass
 from .routing import optimize_route, process_area
 from .segmentation import segment_folder
 
@@ -139,8 +139,8 @@ async def upload_file(source: str, file: UploadFile):
     return Response(status_code=200)
 
 
-@router.get("/process")
-async def process():
+@router.post("/process")
+async def process(params: dict[SegmentationClass, int]):
     current_mission = await query_current_mission()
     if current_mission is None:
         return Response(status_code=502)
