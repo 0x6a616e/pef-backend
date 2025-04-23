@@ -57,7 +57,3 @@ def distance_filter(results: list[Result]) -> list[Result]:
             filtered_results.append(result_1)
 
     return filtered_results
-
-
-DEFAULT_FILTER = create_stack(distribution_filter, distance_filter)
-SOFT_FILTER = create_stack(distance_filter)
