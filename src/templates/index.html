@@ -107,10 +107,6 @@
                 backImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
             });
 
-            container.addEventListener('mouseleave', () => {
-                backImg.style.clipPath = 'circle(0px at 0px 0px)';
-            });
-
             container.addEventListener("wheel", (e) => {
                 const rect = container.getBoundingClientRect();
                 const x = e.clientX - rect.left;
@@ -122,6 +118,23 @@
                     overlaySize = Math.min(100, overlaySize + overlayDelta);
                 }
                 backImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
+            });
+
+            ["touchstart", "touchmove"].forEach((event) => {
+                container.addEventListener(event, (e) => {
+                    const touch = e.touches[0];
+                    const rect = container.getBoundingClientRect();
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+
+                    backImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
+                });
+            });
+
+            ["mouseleave", "touchend"].forEach((event) => {
+                container.addEventListener(event, () => {
+                    backImg.style.clipPath = 'circle(0px at 0px 0px)';
+                });
             });
         });
 
@@ -161,8 +174,21 @@
                 modalBackImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
             });
 
-            modalContainer.addEventListener('mouseleave', () => {
-                modalBackImg.style.clipPath = 'circle(0px at 0px 0px)';
+            ["touchstart", "touchmove"].forEach((event) => {
+                modalContainer.addEventListener(event, (e) => {
+                    const touch = e.touches[0];
+                    const rect = modalContainer.getBoundingClientRect();
+                    const x = touch.clientX - rect.left;
+                    const y = touch.clientY - rect.top;
+
+                    modalBackImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
+                });
+            });
+
+            ["mouseleave", "touchend"].forEach((event) => {
+                modalContainer.addEventListener(event, () => {
+                    modalBackImg.style.clipPath = 'circle(0px at 0px 0px)';
+                });
             });
         }
     </script>
