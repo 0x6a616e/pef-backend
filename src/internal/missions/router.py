@@ -166,9 +166,7 @@ async def process(params: dict[SegmentationClass, int]):
         start=current_mission.start,
         foldername=uuid4().hex
     )
-    for result in filtered_results:
-        coord = result.coordinate
-        new_mission.waypoints.append(coord)
+    new_mission.waypoints.extend((r.coordinate for r in results))
     new_mission = optimize_route(new_mission)
     await insert_mission(new_mission)
     return JSONResponse(status_code=200, content=new_mission.model_dump())
