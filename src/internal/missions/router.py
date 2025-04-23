@@ -141,6 +141,14 @@ async def upload_file(source: str, file: UploadFile):
 
 @router.post("/process")
 async def process(params: dict[SegmentationClass, int]):
+    filters = []
+    for field, value in params.items():
+        if value > 0:
+            filters.append(greater_than(field, value))
+        elif value < 0:
+            filters.append(less_than(field, -1 * value))
+    filters.append(distance_filter)
+    filter = compose(filters)
     current_mission = await query_current_mission()
     if current_mission is None:
         return Response(status_code=502)
@@ -149,11 +157,9 @@ async def process(params: dict[SegmentationClass, int]):
     if not results:
         return Response(status_code=502)
 
-    filtered_results = DEFAULT_FILTER(results)
-    if len(filtered_results) == 0:
-        filtered_results = SOFT_FILTER(results)
+    results = filter(results)
 
-    current_mission.results = filtered_results
+    current_mission.results = results
     await update_mission(current_mission)
 
     new_mission = Mission(
