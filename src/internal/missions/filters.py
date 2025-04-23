@@ -15,13 +15,7 @@ def create_stack(*filters: Filter) -> Filter:
     return stack
 
 
-def distribution_filter(results: list[Result]) -> list[Result]:
-    filtered_results = []
 
-    for result in results:
-        agua = result.distribution.get(SegmentationClass.AGUA, 0)
-        seca = result.distribution.get(SegmentationClass.VEGETACION_SECA, 0)
-        verde = result.distribution.get(SegmentationClass.VEGETACION_VERDE, 0)
 def less_than(field: SegmentationClass, value: int):
     def c(rs: list[Result]) -> list[Result]:
         results = []
@@ -31,13 +25,7 @@ def less_than(field: SegmentationClass, value: int):
         return results
     return c
 
-        if agua > 40:
-            continue
-        if seca == 0 and verde == 0:
-            continue
-        filtered_results.append(result)
 
-    return filtered_results
 def greater_than(field: SegmentationClass, value: int):
     def c(rs: list[Result]) -> list[Result]:
         results = []
