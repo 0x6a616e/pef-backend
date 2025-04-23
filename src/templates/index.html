@@ -95,7 +95,9 @@
         map.on("popupopen", () => {
             const container = document.querySelector('.image-container');
             const backImg = document.querySelector('.back-img');
+
             let overlaySize = 20;
+            let overlayDelta = 5;
 
             container.addEventListener('mousemove', (e) => {
                 const rect = container.getBoundingClientRect();
@@ -115,9 +117,9 @@
                 const y = e.clientY - rect.top;
 
                 if (e.deltaY > 0) {
-                    overlaySize = Math.max(0, overlaySize - 1);
+                    overlaySize = Math.max(0, overlaySize - overlayDelta);
                 } else {
-                    overlaySize = Math.min(100, overlaySize + 1);
+                    overlaySize = Math.min(100, overlaySize + overlayDelta);
                 }
                 backImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
             });
@@ -132,6 +134,7 @@
             const modalFrontImg = document.querySelector('.modal-front-img');
 
             let overlaySize = 20;
+            let overlayDelta = 5;
 
             modalBackImg.src = backImg.src;
             modalFrontImg.src = frontImg.src;
@@ -149,10 +152,11 @@
                 const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
 
+
                 if (e.deltaY > 0) {
-                    overlaySize = Math.max(0, overlaySize - 1);
+                    overlaySize = Math.max(0, overlaySize - overlayDelta);
                 } else {
-                    overlaySize = Math.min(100, overlaySize + 1);
+                    overlaySize = Math.min(100, overlaySize + overlayDelta);
                 }
                 modalBackImg.style.clipPath = `circle(${overlaySize}% at ${x}px ${y}px)`;
             });
