@@ -38,6 +38,14 @@ def less_than(field: SegmentationClass, value: int):
         filtered_results.append(result)
 
     return filtered_results
+def greater_than(field: SegmentationClass, value: int):
+    def c(rs: list[Result]) -> list[Result]:
+        results = []
+        for r in rs:
+            if r.distribution[field] >= value:
+                results.append(r)
+        return results
+    return c
 
 
 def distance_filter(results: list[Result]) -> list[Result]:
