@@ -7,13 +7,13 @@ from .routing import distance
 
 Filter = Callable[[list[Result]], list[Result]]
 
-def create_stack(*filters: Filter) -> Filter:
-    def stack(results: list[Result]) -> list[Result]:
-        for filter in filters:
-            results = filter(results)
-        return results
-    return stack
 
+def compose(filters: list[Filter]) -> Filter:
+    def s(rs: list[Result]) -> list[Result]:
+        for f in filters:
+            rs = f(rs)
+        return rs
+    return s
 
 
 def less_than(field: SegmentationClass, value: int):
