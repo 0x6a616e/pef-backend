@@ -149,6 +149,7 @@ async def process(params: dict[SegmentationClass, int]):
             filters.append(less_than(field, -1 * value))
     filters.append(distance_filter)
     filter = compose(filters)
+
     current_mission = await query_current_mission()
     if current_mission is None:
         return Response(status_code=502)
