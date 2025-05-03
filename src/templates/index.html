@@ -73,7 +73,8 @@
             class="mt-1 w-64 bg-white border border-gray-300 rounded shadow max-h-60 overflow-y-auto scroll-smooth">
             {% for id, t in data_list %}
             <div @click="selected = '{{ id }}'; open = false" hx-get="/map/{{id}}" hx-target="#script_tag"
-                hx-swap="outerHTML" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                hx-swap="outerHTML" class="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                x-bind:class="selected == '{{id}}' ? 'bg-gray-200' : ''">
                 <div class="text-sm font-medium">{{ id }}</div>
                 <div class="text-xs text-gray-500">{{ t }}</div>
             </div>
