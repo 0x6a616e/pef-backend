@@ -9,10 +9,9 @@
     <p class="text-sm font-medium">
         Latitud: {{result.coordinate.latitude}}<br/>
         Longitud: {{result.coordinate.longitude}}<br/>
-        Porcentaje de agua: {{result.distribution["1"]}}%<br/>
-        Porcentaje de suelo expuesto: {{result.distribution["2"]}}%<br/>
-        Porcentaje de vegetación seca: {{result.distribution["3"]}}%<br/>
-        Porcentaje de vegetación verde: {{result.distribution["4"]}}%<br/>
+        {% for seg_class, dist in result.distribution.items() %}
+        Porcentaje de {{seg_class.name}}: {{dist}}%<br/>
+        {% endfor %}
     </p>
     <div class="image-container cursor-pointer" @click="modal_open = true ; updateSrc()">
         <img 

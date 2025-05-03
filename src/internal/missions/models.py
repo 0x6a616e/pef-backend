@@ -25,6 +25,20 @@ class SegmentationClass(StrEnum):
             case SegmentationClass.VEGETACION_VERDE:
                 return "#08920a"
 
+    @property
+    def name(self) -> str:
+        match self:
+            case SegmentationClass.FONDO:
+                return "Fondo"
+            case SegmentationClass.AGUA:
+                return "Agua"
+            case SegmentationClass.SUELO_EXPUESTO:
+                return "Suelo Expuesto"
+            case SegmentationClass.VEGETACION_SECA:
+                return "Vegetación Seca"
+            case SegmentationClass.VEGETACION_VERDE:
+                return "Vegetación Verde"
+
 
 class Result(BaseModel):
     image: str
