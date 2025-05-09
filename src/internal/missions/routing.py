@@ -1,4 +1,4 @@
-from math import pi, sin, cos, atan2, sqrt
+from geopy.distance import distance as geodistance
 from pydantic_extra_types.coordinate import Coordinate, Latitude, Longitude
 from ortools.constraint_solver import routing_enums_pb2, pywrapcp
 
@@ -7,16 +7,9 @@ from .models import Mission
 
 
 def distance(point1: Coordinate, point2: Coordinate) -> int:
-    R = 6371e3
-    phi1 = point1.latitude * pi / 180
-    phi2 = point2.latitude * pi / 180
-    diff_phi = (point2.latitude - point1.latitude) * pi / 180
-    diff_gamma = (point2.longitude - point1.longitude) * pi / 180
-    a = sin(diff_phi / 2) * sin(diff_phi / 2) + cos(phi1) * \
-        cos(phi2) * sin(diff_gamma / 2) * sin(diff_gamma / 2)
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-    d = R * c
-    return int(d)
+    p1 = (point1.latitude, point1.longitude)
+    p2 = (point2.latitude, point2.longitude)
+    return int(geodistance(p1, p2).m)
 
 
 def generate_distance_matrix(mission: Mission) -> list[list[int]]:
