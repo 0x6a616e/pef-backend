@@ -10,7 +10,9 @@
         Latitud: {{result.coordinate.latitude}}<br/>
         Longitud: {{result.coordinate.longitude}}<br/>
         {% for seg_class, dist in result.distribution.items() %}
-        Porcentaje de {{seg_class.name}}: {{dist}}%<br/>
+            {% if dist > 0 %}
+                Porcentaje de {{seg_class.name}}: {{dist}}%<br/>
+            {% endif %}
         {% endfor %}
     </p>
     <div class="image-container cursor-pointer" @click="modal_open = true ; updateSrc()">
