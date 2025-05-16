@@ -41,8 +41,9 @@ async def update_mission(mission: Mission) -> None:
 
 
 async def query_mission_list() -> list[str]:
-    cursor = mission_collection.find(sort=[("_id", -1)], projection=["_id"])
+    cursor = mission_collection.find(sort=[("_id", -1)])
     id_list = []
-    async for mission_id in cursor:
-        id_list.append(str(mission_id["_id"]))
+    async for mission in cursor:
+        if mission["results"]:
+            id_list.append(str(mission["_id"]))
     return id_list
