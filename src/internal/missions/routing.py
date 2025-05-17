@@ -65,15 +65,15 @@ def middle_point(point1: Coordinate, point2: Coordinate) -> Coordinate:
     return Coordinate(latitude=lat, longitude=lng)
 
 
-def divide_line(points: list[Coordinate], idx1: int, idx2: int) -> None:
-    point1 = points[idx1]
-    point2 = points[idx2]
-    if (distance(point1, point2) < settings.min_distance):
-        return
-    middle = middle_point(point1, point2)
-    points.insert(idx2, middle)
-    divide_line(points, idx2, idx2 + 1)
-    divide_line(points, idx1, idx2)
+def divide_line(points: list[Coordinate]) -> list[Coordinate]:
+    new_points = [points[0]]
+    for point in points[1:]:
+        p1 = new_points[-1]
+        p2 = point
+        if distance(p1, p2) >= settings.min_distance:
+            new_points.append(middle_point(p1, p2))
+        new_points.append(p2)
+    return new_points
 
 
 def process_area(points: list[Coordinate]) -> list[Coordinate]:
@@ -90,8 +90,10 @@ def process_area(points: list[Coordinate]) -> list[Coordinate]:
     br = Coordinate(latitude=lats[0], longitude=lngs[-1])
     ll = [bl, ul]
     rl = [br, ur]
-    divide_line(ll, 0, 1)
-    divide_line(rl, 0, 1)
+    while len(ll) <= settings.waypoint_limit // 4:
+        ll = divide_line(ll)
+    while len(rl) <= settings.waypoint_limit // 4:
+        rl = divide_line(rl)
     proccesed_list = [item for pair in zip(ll, rl) for item in pair]
     for i in range(2, len(proccesed_list), 4):
         tmp = proccesed_list[i]

@@ -55,5 +55,7 @@ def distance_filter(results: list[Result]) -> list[Result]:
                 break
         if to_add:
             filtered_results.append(result_1)
+        if len(filtered_results) == settings.waypoint_limit:
+            break
 
     return filtered_results

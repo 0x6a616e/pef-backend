@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     mongo_url: str = ""
     image_size: tuple[int, int] = (680, 382)
     min_distance: int = 15
+    waypoint_limit: int = 99
 
 
 settings = Settings()
