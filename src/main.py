@@ -71,6 +71,6 @@ async def index(request: Request):
         request=request,
         name="index.html",
         context={
-            "data_list": proccesed_list[1:]
+            "data_list": proccesed_list
         }
     )
